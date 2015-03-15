@@ -1,25 +1,74 @@
 ---
 title: "Reproducible Research: Peer Assessment 1"
 output: 
-  html_document:
-    keep_md: true
+html_document:
+keep_md: true
 ---
-
-
 ## Loading and preprocessing the data
-
-
-
+```{r}
+dat<-read.csv('activity.csv')
+```
 ## What is mean total number of steps taken per day?
-
-
+```{r plot,fig.height=5}
+stepsPerDay<-sapply(split(dat$steps,dat$date),sum)
+hist(stepsPerDay)
+```
+```{r}
+meanSteps<-mean(stepsPerDay[!is.na(stepsPerDay)])
+medianSteps<-median(stepsPerDay[!is.na(stepsPerDay)])
+```
+The mean steps per day is `r meanSteps` and the median steps per day is `r medianSteps`.  
 
 ## What is the average daily activity pattern?
+```{r plotmean,fig.height=4}
+dailyMeanActivity<-tapply(dat$step,dat$interval,mean,na.rm=TRUE)
+intervals=levels(factor(dat$interval))
+plot(intervals,dailyMeanActivity,type="l",main='Daily Mean Activity')
+```
+```{r}
+maxInd<-match(max(dailyMeanActivity),dailyMeanActivity)
+maxInterval<-intervals[maxInd]
+```
+The 5 minute interval containing the maximum number of steps is at `r maxInterval`  
+## Inputing missing values
+```{r histplot,fig.height=5}
+numNAs<-length(dat[is.na(dat$steps)==TRUE,'steps'])
+datFilled<-dat
+dailyMeanVec<-rep(dailyMeanActivity,length=length(dat$steps))
+for(i in 1:length(dat$steps)){
+        if(is.na(datFilled[i,'steps'])==TRUE){
+                datFilled[i,'steps']<-dailyMeanVec[i]
+        }
+}
 
-
-
-## Imputing missing values
-
-
+stepsPerDayFilled<-sapply(split(datFilled$steps,datFilled$date),sum)
+hist(stepsPerDayFilled)
+```
+```{r}
+meanStepsFill<-mean(stepsPerDayFilled[!is.na(stepsPerDayFilled)])
+medianStepsFill<-median(stepsPerDayFilled[!is.na(stepsPerDayFilled)])
+meanStepsDiff<-abs(meanStepsFill-meanSteps)
+medianStepsDiff<-abs(medianStepsFill-medianSteps)
+```
+Mean steps taken per day is `r meanStepsFill`. Median steps taken per day is `r medianStepsFill`.  
+These two have a difference of `r meanStepsDiff` and `r medianStepsDiff` from the nonfilled mean and median, respectively. These two differences are negligible and thus the values do not differ.  
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r plotcomparison,fig.height=8}
+week<-sapply(as.Date(dat$date),weekdays)
+isWeekend<-rep(c('Weekday','Weekend'),length=length(week))
+for(i in 1:length(week)){
+        if(week[i]=='Monday'| week[i]=='Tuesday'| week[i]=='Wednesday'| week[i]=='Thursday'| week[i]=='Friday'){
+                isWeekend[i]<-'Weekday'
+                } else{
+                        isWeekend[i]<-'Weekend'
+                }
+}
+dat<-data.frame(dat,isWeekend)
+weekdayMeanActivity<-tapply(dat[dat['isWeekend']=='Weekday','steps'],dat[dat['isWeekend']=='Weekday','interval'],mean,na.rm=TRUE)
+weekendMeanActivity<-tapply(dat[dat['isWeekend']=='Weekend','steps'],dat[dat['isWeekend']=='Weekend','interval'],mean,na.rm=TRUE)
+
+par(mfrow=c(2,1))
+plot(intervals,weekdayMeanActivity,type='l',main='Weekday')
+plot(intervals,weekendMeanActivity,type='l',main='Weekend')
+```
