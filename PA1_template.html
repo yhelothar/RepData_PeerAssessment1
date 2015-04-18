@@ -208,7 +208,8 @@ hr {
 
 <h2>What is mean total number of steps taken per day?</h2>
 
-<pre><code class="r">stepsPerDay&lt;-sapply(split(dat$steps,dat$date),sum)
+<pre><code class="r">#Finding the sum of all the steps taken per day
+stepsPerDay&lt;-sapply(split(dat$steps,dat$date),sum)
 hist(stepsPerDay)
 </code></pre>
 
@@ -222,8 +223,12 @@ medianSteps&lt;-median(stepsPerDay[!is.na(stepsPerDay)])
 
 <h2>What is the average daily activity pattern?</h2>
 
-<pre><code class="r">dailyMeanActivity&lt;-tapply(dat$step,dat$interval,mean,na.rm=TRUE)
+<pre><code class="r">#Create vector with mean activity per day. 
+dailyMeanActivity&lt;-tapply(dat$step,dat$interval,mean,na.rm=TRUE)
+
+#Creating vector with each time interval
 intervals=levels(factor(dat$interval))
+
 plot(intervals,dailyMeanActivity,type=&quot;l&quot;,main=&#39;Daily Mean Activity&#39;)
 </code></pre>
 
@@ -237,16 +242,17 @@ maxInterval&lt;-intervals[maxInd]
 
 <h2>Inputing missing values</h2>
 
-<pre><code class="r">numNAs&lt;-length(dat[is.na(dat$steps)==TRUE,&#39;steps&#39;])
-datFilled&lt;-dat
-dailyMeanVec&lt;-rep(dailyMeanActivity,length=length(dat$steps))
-for(i in 1:length(dat$steps)){
+<pre><code class="r">#Strategy to input missing values is to take the daily mean activity for each respective time interval and to replace each missing value with it.
+
+datFilled&lt;-dat #Initializing vector of filled values
+dailyMeanVec&lt;-rep(dailyMeanActivity,length=length(dat$steps)) #Creating a vector of the daily mean value for each time interval for all the days
+for(i in 1:length(dat$steps)){ #Loop goes through the data and fills in the missing value with the respective daily mean value.
         if(is.na(datFilled[i,&#39;steps&#39;])==TRUE){
                 datFilled[i,&#39;steps&#39;]&lt;-dailyMeanVec[i]
         }
 }
 
-stepsPerDayFilled&lt;-sapply(split(datFilled$steps,datFilled$date),sum)
+stepsPerDayFilled&lt;-sapply(split(datFilled$steps,datFilled$date),sum) #Vector of sum of steps per day for filled data.
 hist(stepsPerDayFilled)
 </code></pre>
 
@@ -258,8 +264,7 @@ meanStepsDiff&lt;-abs(meanStepsFill-meanSteps)
 medianStepsDiff&lt;-abs(medianStepsFill-medianSteps)
 </code></pre>
 
-<p>Mean steps taken per day is 1.0766189 &times; 10<sup>4</sup>. Median steps taken per day is 1.0766189 &times; 10<sup>4</sup>.<br/>
-These two have a difference of 0 and 1.1886792 from the nonfilled mean and median, respectively. These two differences are negligible and thus the values do not differ.  </p>
+<p>Mean steps taken per day is 1.0766189 &times; 10<sup>4</sup>. Median steps taken per day is 1.0766189 &times; 10<sup>4</sup>.  The mean steps did not change after filling in the data. This is reasonable since the data filled in was the mean activity for that day so adding data points in from the mean would not shift the mean. The median of the filled data was slightly raised to equal the mean. </p>
 
 <h2>Are there differences in activity patterns between weekdays and weekends?</h2>
 
